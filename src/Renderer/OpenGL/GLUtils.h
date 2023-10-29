@@ -3,4 +3,5 @@
 #include <SDL_opengl.h>
 #include "../Utils.h"
 
-class CGLShader;
+struct CGLRenderer;
+struct CGLShader;
