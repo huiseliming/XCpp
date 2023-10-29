@@ -1,0 +1,12 @@
+# Format Style Options - Created with Clang Power Tools
+---
+BasedOnStyle: Google
+AllowShortFunctionsOnASingleLine: Inline
+BreakConstructorInitializers: BeforeComma
+ColumnLimit: '128'
+Language: Cpp
+MacroBlockBegin: "^NS_.*_BG$"
+MacroBlockEnd: "^NS_.*_ED$"
+PenaltyBreakAssignment: '128'
+SortIncludes: 'false'
+...
