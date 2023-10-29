@@ -17,4 +17,4 @@ enum class EShaderType {
   Compute,
 };
 
-class IShader;
+struct IShader;

@@ -56,7 +56,7 @@ bool CApp::Init() {
       Renderer = new CVKRenderer();
     } else if (RendererType == ERendererType::OpenGL) {
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+      SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
       SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
       SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
       SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -65,9 +65,9 @@ bool CApp::Init() {
                                     sdl_window_flags | SDL_WINDOW_OPENGL);
       Renderer = new CGLRenderer();
     } else {
-      X_ASSERT(false);
+      X_NEVER_EXECUTED();
     }
-    Renderer->Init();
+    Renderer->Init(MainWindow);
   }
   return true;
 }

@@ -1,6 +1,4 @@
 #pragma once
-
-#include <SDL_events.h>
 #include "Renderer/Renderer.h"
 #include "ImGui/ImGuiLayer.h"
 

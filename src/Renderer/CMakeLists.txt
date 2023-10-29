@@ -5,7 +5,7 @@ file(GLOB_RECURSE ${CURRENT_MODULE_NAME}_SOURCES *.c *.cc *.cpp *.cxx)
 
 source_group(
   TREE ${CMAKE_CURRENT_SOURCE_DIR} 
-  PREFIX Core
+  PREFIX src
   FILES ${${CURRENT_MODULE_NAME}_HEADERS} ${${CURRENT_MODULE_NAME}_SOURCES}
 )
 # library target 
@@ -32,6 +32,43 @@ generate_export_header(${CURRENT_MODULE_NAME}
     EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_MODULE_NAME}Export.h
 )
 # precompile header
-target_precompile_headers(${CURRENT_MODULE_NAME}
-    PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_MODULE_NAME}Export.h
+target_precompile_headers(${CURRENT_MODULE_NAME} PUBLIC 
+    ${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_MODULE_NAME}Export.h
 )
+
+# if(NOT CMAKE_PROPERTY_LIST)
+#     execute_process(COMMAND cmake --help-property-list OUTPUT_VARIABLE CMAKE_PROPERTY_LIST)
+    
+#     # Convert command output into a CMake list
+#     string(REGEX REPLACE ";" "\\\\;" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}")
+#     string(REGEX REPLACE "\n" ";" CMAKE_PROPERTY_LIST "${CMAKE_PROPERTY_LIST}")
+#     list(REMOVE_DUPLICATES CMAKE_PROPERTY_LIST)
+# endif()
+    
+# function(print_properties)
+#     message("CMAKE_PROPERTY_LIST = ${CMAKE_PROPERTY_LIST}")
+# endfunction()
+    
+# function(print_target_properties target)
+#     if(NOT TARGET ${target})
+#       message(STATUS "There is no target named '${target}'")
+#       return()
+#     endif()
+
+#     foreach(property ${CMAKE_PROPERTY_LIST})
+#         string(REPLACE "<CONFIG>" "${CMAKE_BUILD_TYPE}" property ${property})
+
+#         # Fix https://stackoverflow.com/questions/32197663/how-can-i-remove-the-the-location-property-may-not-be-read-from-target-error-i
+#         if(property STREQUAL "LOCATION" OR property MATCHES "^LOCATION_" OR property MATCHES "_LOCATION$")
+#             continue()
+#         endif()
+
+#         get_property(was_set TARGET ${target} PROPERTY ${property} SET)
+#         if(was_set)
+#             get_target_property(value ${target} ${property})
+#             message("${target} ${property} = ${value}")
+#         endif()
+#     endforeach()
+# endfunction()
+
+# print_target_properties(${CURRENT_MODULE_NAME})

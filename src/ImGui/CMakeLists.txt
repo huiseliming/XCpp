@@ -5,7 +5,7 @@ file(GLOB_RECURSE ${CURRENT_MODULE_NAME}_SOURCES *.c *.cc *.cpp *.cxx)
 
 source_group(
   TREE ${CMAKE_CURRENT_SOURCE_DIR} 
-  PREFIX Core
+  PREFIX src
   FILES ${${CURRENT_MODULE_NAME}_HEADERS} ${${CURRENT_MODULE_NAME}_SOURCES}
 )
 # library target 

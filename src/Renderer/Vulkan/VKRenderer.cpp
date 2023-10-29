@@ -19,12 +19,12 @@ glslang_stage_t GetGLSLangStageShaderType(EShaderType shader_type) {
     case EShaderType::Compute:
       return GLSLANG_STAGE_COMPUTE;
     default:
-      X_ASSERT(false);
+      X_NEVER_EXECUTED();
   }
   return glslang_stage_t();
 }
 
-void CVKRenderer::Init() {}
+void CVKRenderer::Init(SDL_Window* main_window) {}
 
 void CVKRenderer::Render() {}
 

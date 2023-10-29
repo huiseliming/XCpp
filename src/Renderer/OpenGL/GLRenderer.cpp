@@ -15,16 +15,32 @@ GLenum GetGLShaderType(EShaderType shader_type) {
     case EShaderType::Compute:
       return GL_COMPUTE_SHADER;
     default:
-      X_ASSERT(false);
+      X_NEVER_EXECUTED();
   }
   return GLenum();
 }
 
-void CGLRenderer::Init() {}
+void CGLRenderer::Init(SDL_Window* main_window) {
+  MainWindow = main_window;
+  OpenGLContext = SDL_GL_CreateContext(MainWindow);
+  SDL_GL_MakeCurrent(MainWindow, OpenGLContext);
+  X_RUNTIME_ASSERT(OpenGLContext != nullptr);
 
-void CGLRenderer::Render() {}
+  gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress);
 
-void CGLRenderer::Shutdown() {}
+  X_RUNTIME_ASSERT(SDL_GL_SetSwapInterval(1) >= 0);
+}
+
+void CGLRenderer::Render() {
+  glClearColor(ClearColor.x, ClearColor.y, ClearColor.z, ClearColor.w);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  SDL_GL_SwapWindow(MainWindow);
+}
+
+void CGLRenderer::Shutdown() {
+  SDL_GL_DeleteContext(OpenGLContext);
+}
 
 IShader* CGLRenderer::CreateShader(EShaderType shader_type, const char* source, const char* entry_point) {
   GLuint shader_handle = glCreateShader(GetGLShaderType(shader_type));
