@@ -39,3 +39,5 @@ build/*
 .cache/*
 .vs/*
 out/*
+
+src/AngelScript/sdk

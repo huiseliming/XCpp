@@ -12,6 +12,8 @@ source_group(
 add_library(${CURRENT_MODULE_NAME} SHARED ${${CURRENT_MODULE_NAME}_HEADERS} ${${CURRENT_MODULE_NAME}_SOURCES})
 # include directories
 target_include_directories(${CURRENT_MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
+# link libraries
+target_link_libraries(${CURRENT_MODULE_NAME} PUBLIC XAngelScript)
 # boost
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})

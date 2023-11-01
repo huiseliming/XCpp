@@ -60,7 +60,7 @@
 #define X_COMBINE(A, B) X_COMBINE_IMPL(A, B)
 #define X_FORMAT(...) fmt::format(__VA_ARGS__)
 
-#define X_THROW_RUNTIME_ERROR(Fmt, ...) throw std::runtime_error(fmt::format("" Fmt, ##__VA_ARGS__));
+#define X_THROW_RUNTIME_ERROR(...) throw std::runtime_error(fmt::format("" __VA_ARGS__));
 #define X_RUNTIME_ASSERT(Expr, ...)                              \
   if (!(Expr)) [[unlikely]] {                                    \
     X_THROW_RUNTIME_ERROR(                                       \
@@ -77,6 +77,9 @@
 #else
 #define X_ASSERT(Expr, ...) (Expr)
 #endif
+
+#define X_ASSERT_FALSE(Expr, ...) X_RUNTIME_ASSERT((Expr) == false, __VA_ARGS__)
+#define X_ASSERT_TRUE(Expr, ...) X_RUNTIME_ASSERT((Expr) == true, __VA_ARGS__)
 
 #define X_NEVER_EXECUTED(...) X_THROW_RUNTIME_ERROR(__VA_ARGS__)
 

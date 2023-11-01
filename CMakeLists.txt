@@ -16,7 +16,7 @@ if(WIN32)
     message("VCPKG_TARGET_TRIPLET: " ${VCPKG_TARGET_TRIPLET})
 endif(WIN32) 
 
-project(X)
+project(XCpp)
  
 include(cmake/CppHeaderTool.cmake)
 

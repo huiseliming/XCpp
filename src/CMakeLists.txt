@@ -1,6 +1,6 @@
 
 
-
+add_subdirectory(AngelScript)
 add_subdirectory(Core)
 add_subdirectory(Renderer)
 add_subdirectory(ImGui)

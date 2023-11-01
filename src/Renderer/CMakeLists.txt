@@ -14,6 +14,9 @@ add_library(${CURRENT_MODULE_NAME} SHARED ${${CURRENT_MODULE_NAME}_HEADERS} ${${
 target_include_directories(${CURRENT_MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
 # link libraries
 target_link_libraries(${CURRENT_MODULE_NAME} PUBLIC XCore)
+# assimp
+find_package(assimp CONFIG REQUIRED)
+target_link_libraries(${CURRENT_MODULE_NAME} PRIVATE assimp::assimp)
 # opengl
 find_package(glad CONFIG REQUIRED)
 target_link_libraries(${CURRENT_MODULE_NAME} PRIVATE glad::glad)

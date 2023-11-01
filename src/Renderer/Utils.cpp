@@ -22,3 +22,8 @@ std::string Utils::LoadCodeFromFile(const std::string& file_path) {
   }
   return "";
 }
+
+
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
