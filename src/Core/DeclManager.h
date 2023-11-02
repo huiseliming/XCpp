@@ -71,6 +71,7 @@ class XCORE_API CDeclManager {
 
  private:
   friend XCORE_API CDeclManager& GetDeclManager();
+  friend class CScriptManager;
 };
 
 auto CDeclManager::Init() -> void {

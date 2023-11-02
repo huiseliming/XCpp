@@ -8,6 +8,16 @@ void CVKRenderer::Init(SDL_Window* main_window) {}
 void CVKRenderer::Render() {}
 
 void CVKRenderer::Shutdown() {}
+
+OTexture* CVKRenderer::ImportTextureFromFile(const std::string& file_path) {
+
+  return nullptr;
+}
+
+OMesh* CVKRenderer::ImportMeshFromFile(const std::string& file_path) {
+  return nullptr;
+}
+
 //
 //IShader* CVKRenderer::CreateShader(EShaderType shader_type, const char* source, const char* entry_point) {
 //  std::string shader_code = Utils::LoadCodeFromFile(source);

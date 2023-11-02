@@ -16,6 +16,9 @@ class OResource : public ORefCntObject
  public:
   OResource() {}
 
+ protected:
+  std::string Name;
+
 };
 
 RTYPE()
@@ -35,6 +38,17 @@ RTYPE()
 class OMaterial : public OResource {
  public:
   OMaterial() {}
+
+};
+
+RTYPE()
+class CResourceManager
+{
+ public:
+  CResourceManager() = default;
+  ~CResourceManager() = default;
+
+ protected:
 
 };
 

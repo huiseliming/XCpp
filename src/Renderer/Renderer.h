@@ -9,8 +9,8 @@ struct XRENDERER_API IRenderer {
   virtual void Shutdown() = 0;
 
   virtual OResource* ImportResourceFromFile(const std::string& file_path);
-  virtual OTexture* ImportTextureFromFile(const std::string& file_path) { return nullptr; }
-  virtual OMesh* ImportMeshFromFile(const std::string& file_path) { return nullptr; }
+  virtual OTexture* ImportTextureFromFile(const std::string& file_path) = 0;
+  virtual OMesh* ImportMeshFromFile(const std::string& file_path) = 0;
 
  protected:
   glm::vec3 CameraPosition;
