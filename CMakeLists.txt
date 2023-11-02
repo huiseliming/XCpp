@@ -17,8 +17,6 @@ if(WIN32)
 endif(WIN32) 
 
 project(XCpp)
- 
-include(cmake/CppHeaderTool.cmake)
 
 # not supported 32 bit machine
 if("${CMAKE_SIZEOF_VOID_P}" STREQUAL "4")
@@ -39,6 +37,8 @@ foreach(CONFIGURATION_TYPE ${CMAKE_CONFIGURATION_TYPES})
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${CONFIGURATION_TYPE_TOUPPER} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CONFIGURATION_TYPE})
     set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${CONFIGURATION_TYPE_TOUPPER} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${CONFIGURATION_TYPE})
 endforeach(CONFIGURATION_TYPE CMAKE_CONFIGURATION_TYPES)
+
+include(cmake/XCppCodeGenerator.cmake)
 
 #add_subdirectory(bin)
 #add_subdirectory(third_party)

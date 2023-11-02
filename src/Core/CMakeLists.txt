@@ -10,6 +10,7 @@ source_group(
 )
 # library target 
 add_library(${CURRENT_MODULE_NAME} SHARED ${${CURRENT_MODULE_NAME}_HEADERS} ${${CURRENT_MODULE_NAME}_SOURCES})
+xcpp_code_generator(${CURRENT_MODULE_NAME})
 # include directories
 target_include_directories(${CURRENT_MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
 # link libraries

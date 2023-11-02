@@ -1,8 +1,5 @@
 #pragma once
 #include "DeclFwd.h"
-#include <angelscript.h>
-#include <scriptarray/scriptarray.h>
-#include <scriptdictionary/scriptdictionary.h>
 
 struct XCORE_API RDecl {
  public:

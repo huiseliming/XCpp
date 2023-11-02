@@ -55,6 +55,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// angelscript
+#include <angelscript.h>
+#include <scriptarray/scriptarray.h>
+#include <scriptdictionary/scriptdictionary.h>
+
 #define X_STRINGIFY(...) #__VA_ARGS__
 #define X_COMBINE_IMPL(A, B) A##B  // helper macro
 #define X_COMBINE(A, B) X_COMBINE_IMPL(A, B)
@@ -82,6 +87,18 @@
 #define X_ASSERT_TRUE(Expr, ...) X_RUNTIME_ASSERT((Expr) == true, __VA_ARGS__)
 
 #define X_NEVER_EXECUTED(...) X_THROW_RUNTIME_ERROR(__VA_ARGS__)
+
+#ifdef __XCPP_CODE_GENERATOR__
+#define RTYPE(...) class [[clang::annotate("@" #__VA_ARGS__)]] X_COMBINE(X_COMBINE(_, __COUNTER__), _){};
+#define RENUM(...) [[clang::annotate("@" #__VA_ARGS__)]]
+#define RPROP(...) [[clang::annotate("@" #__VA_ARGS__)]]
+#define RFUNC(...) [[clang::annotate("@" #__VA_ARGS__)]]
+#else
+#define RTYPE(...)
+#define RENUM(...)
+#define RPROP(...)
+#define RFUNC(...)
+#endif
 
 #define X_ENUM_FLAGS(Enum)                                                                                                     \
   FORCEINLINE Enum& operator|=(Enum& LHS, Enum RHS) {                                                                          \
@@ -129,22 +146,6 @@ typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
-
-// #ifdef __EXECUTE_CPP_KIT_HEADER_TOOL__
-// #define RTYPE(...) \
-//   class [[clang::annotate("@" #__VA_ARGS__)]] X_COMBINE(X_COMBINE(_, __COUNTER__), _) {};
-// #define RENUM(...) [[clang::annotate("@" #__VA_ARGS__)]]
-// #define RPROP(...) [[clang::annotate("@" #__VA_ARGS__)]]
-// #define RFUNC(...) [[clang::annotate("@" #__VA_ARGS__)]]
-// #else
-// #define RTYPE(...)
-// #define RENUM(...)
-// #define RPROP(...)
-// #define RFUNC(...)
-// #endif
-
-// template <typename T>
-// struct TCodeContainer {};
 
 namespace GVar {
 

@@ -39,6 +39,13 @@ target_precompile_headers(${CURRENT_MODULE_NAME} PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}/${CURRENT_MODULE_NAME}Export.h
 )
 
+# set_target_properties(${CURRENT_MODULE_NAME} PROPERTIES XCPP_CODE_GENERATOR_TARGETS ${CMAKE_CURRENT_SOURCE_DIR}/Object.h)
+
+# #define_property(TARGET PROPERTY XCPP_CODE_GENERATOR_TARGETS)
+# set_target_properties(${CURRENT_MODULE_NAME} PROPERTIES XCPP_CODE_GENERATOR_TARGETS )
+# get_target_property(var ${CURRENT_MODULE_NAME} XCPP_CODE_GENERATOR_TARGETS)
+# message("var": ${var})
+
 # if(NOT CMAKE_PROPERTY_LIST)
 #     execute_process(COMMAND cmake --help-property-list OUTPUT_VARIABLE CMAKE_PROPERTY_LIST)
     

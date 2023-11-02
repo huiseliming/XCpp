@@ -1,4 +1,5 @@
 #pragma once
+#include "DeclManager.h"
 
 template <typename T>
 struct TBuiltin : public RBuiltin {
