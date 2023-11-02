@@ -116,7 +116,7 @@ void CGLRenderer::Shutdown() {
   SDL_GL_DeleteContext(OpenGLContext);
 }
 
-ITexture* CGLRenderer::ImportTextureFromFile(const std::string& file_path) {
+OTexture* CGLRenderer::ImportTextureFromFile(const std::string& file_path) {
   GLuint texture_handle;
   glGenTextures(1, &texture_handle);
   glBindTexture(GL_TEXTURE_2D, texture_handle);  // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
@@ -143,7 +143,7 @@ ITexture* CGLRenderer::ImportTextureFromFile(const std::string& file_path) {
   return nullptr;
 }
 
-IMesh* CGLRenderer::ImportMeshFromFile(const std::string& file_path) {
+OMesh* CGLRenderer::ImportMeshFromFile(const std::string& file_path) {
     Assimp::Importer importer;
 
     // And have it read the given file with some example postprocessing

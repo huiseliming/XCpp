@@ -1,7 +1,5 @@
 #pragma once
 #include "Utils.h"
-#include "Texture.h"
-#include "Mesh.h"
 
 struct XRENDERER_API IRenderer {
  public:
@@ -10,9 +8,9 @@ struct XRENDERER_API IRenderer {
   virtual void Render() = 0;
   virtual void Shutdown() = 0;
 
-  virtual IResource* ImportResourceFromFile(const std::string& file_path);
-  virtual ITexture* ImportTextureFromFile(const std::string& file_path) { return nullptr; }
-  virtual IMesh* ImportMeshFromFile(const std::string& file_path) { return nullptr; }
+  virtual OResource* ImportResourceFromFile(const std::string& file_path);
+  virtual OTexture* ImportTextureFromFile(const std::string& file_path) { return nullptr; }
+  virtual OMesh* ImportMeshFromFile(const std::string& file_path) { return nullptr; }
 
  protected:
   glm::vec3 CameraPosition;

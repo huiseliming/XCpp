@@ -21,8 +21,8 @@ std::unordered_map<std::string, EResourceType> ExtensionNameToResourceType = {
     {"png", EResourceType::Texture},  {"jpg", EResourceType::Texture},
 };
 
-IResource* IRenderer::ImportResourceFromFile(const std::string& file_path) {
-  IResource* return_resource = nullptr;
+OResource* IRenderer::ImportResourceFromFile(const std::string& file_path) {
+  OResource* return_resource = nullptr;
   std::string file_extension = std::filesystem::path(file_path).extension().string();
   auto find_resource_type_it = ExtensionNameToResourceType.find(file_extension);
   if (find_resource_type_it != ExtensionNameToResourceType.end()) {

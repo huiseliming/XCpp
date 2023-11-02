@@ -199,10 +199,11 @@ FORCEINLINE void ORefCntObject::ReleaseSharedReference() {
   RefCntController->ReleaseSharedReference();
 }
 
-FORCEINLINE CRefCntController::CRefCntController(ORefCntObject* rc_object)
-    : RefCntObject(rc_object){X_ASSERT(RefCntObject)}
+FORCEINLINE CRefCntController::CRefCntController(ORefCntObject* rc_object) : RefCntObject(rc_object) {
+  X_ASSERT(RefCntObject);
+}
 
-    FORCEINLINE CRefCntController::~CRefCntController() {}
+FORCEINLINE CRefCntController::~CRefCntController() {}
 
 FORCEINLINE int32_t CRefCntController::GetSharedReferenceCount() {
   return SharedReferenceCount.load(std::memory_order_relaxed);
