@@ -89,7 +89,8 @@
 #define X_NEVER_EXECUTED(...) X_THROW_RUNTIME_ERROR(__VA_ARGS__)
 
 #ifdef __XCPP_CODE_GENERATOR__
-#define RTYPE(...) class [[clang::annotate("@" #__VA_ARGS__)]] X_COMBINE(X_COMBINE(_, __COUNTER__), _){};
+#define RTYPE(...) \
+  class [[clang::annotate("@" #__VA_ARGS__)]] X_COMBINE(X_COMBINE(_, __COUNTER__), _) {};
 #define RENUM(...) [[clang::annotate("@" #__VA_ARGS__)]]
 #define RPROP(...) [[clang::annotate("@" #__VA_ARGS__)]]
 #define RFUNC(...) [[clang::annotate("@" #__VA_ARGS__)]]

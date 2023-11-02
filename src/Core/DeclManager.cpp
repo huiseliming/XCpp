@@ -37,7 +37,7 @@ struct TCodeContainer<_> {
     s_string_type.ASDecl = "string";
     StringType = &s_string_type;
   }
-  RClass* StringType { nullptr };
+  RClass* StringType{nullptr};
 };
 TCodeContainer<_> code_generator;
 RClass& String = *code_generator.StringType;

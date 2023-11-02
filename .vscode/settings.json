@@ -1,5 +1,5 @@
 {
-    //"cmake.generator": "Ninja",
+    "cmake.generator": "Ninja",
     "editor.formatOnSave": true
     // "cmake.configureSettings": {
     //     "CMAKE_MAKE_PROGRAM" : "E:/CppProjects/CppKit/bin/ninja.exe",

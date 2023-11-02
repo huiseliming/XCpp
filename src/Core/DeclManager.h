@@ -20,7 +20,7 @@ XCORE_API extern RBuiltin& Uint64;
 XCORE_API extern RBuiltin& Float;
 XCORE_API extern RBuiltin& Double;
 XCORE_API extern RClass& String;
-}
+}  // namespace GDecl
 
 class XCORE_API CDeclManager {
  private:
@@ -32,24 +32,25 @@ class XCORE_API CDeclManager {
   CDeclManager() = default;
   CDeclManager(const CDeclManager& other) = delete;
   CDeclManager& operator=(const CDeclManager& other) = delete;
+
  public:
   FORCEINLINE ~CDeclManager() = default;
   FORCEINLINE auto Init() -> void;
   FORCEINLINE auto Exit() -> void;
-  FORCEINLINE auto FindType(const std::string& name) -> RType* ;
-  FORCEINLINE auto FindEnum(const std::string& name) -> REnum* ;
-  FORCEINLINE auto FindClass(const std::string& name) -> RClass* ;
-  FORCEINLINE auto FindStruct(const std::string& name) -> RStruct* ;
-  FORCEINLINE auto FindProperty(const std::string& name) -> RProperty* ;
-  FORCEINLINE auto FindFunction(const std::string& name) -> RFunction* ;
+  FORCEINLINE auto FindType(const std::string& name) -> RType*;
+  FORCEINLINE auto FindEnum(const std::string& name) -> REnum*;
+  FORCEINLINE auto FindClass(const std::string& name) -> RClass*;
+  FORCEINLINE auto FindStruct(const std::string& name) -> RStruct*;
+  FORCEINLINE auto FindProperty(const std::string& name) -> RProperty*;
+  FORCEINLINE auto FindFunction(const std::string& name) -> RFunction*;
   FORCEINLINE auto GetDeclMap() -> const std::unordered_map<std::string, RDecl*>&;
-  FORCEINLINE auto GetNamespace(const std::string& ns)->RNamespace*;
-  FORCEINLINE auto RegisterGlobalVariables(RProperty* global_var)->void;
+  FORCEINLINE auto GetNamespace(const std::string& ns) -> RNamespace*;
+  FORCEINLINE auto RegisterGlobalVariables(RProperty* global_var) -> void;
 
   template <typename T>
   FORCEINLINE auto FindDecl(const std::string& name) -> T*;
   template <typename T>
-  FORCEINLINE auto DelaySetType(std::function<void(RType*)>&& set_type_callback)->void;
+  FORCEINLINE auto DelaySetType(std::function<void(RType*)>&& set_type_callback) -> void;
   template <typename T, typename B = void>
   FORCEINLINE auto RegisterType(RType* type) -> void;
   template <typename PropType>
@@ -61,14 +62,14 @@ class XCORE_API CDeclManager {
   template <typename M>
   FORCEINLINE auto CreateUnorderedMapType() -> RUnorderedMapType*;
 
-protected:
+ protected:
   std::vector<std::unique_ptr<RType>> TemplateSpecializationTypes;
   std::vector<std::unique_ptr<RNamespace>> Namespaces;
   std::vector<RProperty*> GlobalVariables;
   std::unordered_map<std::string, RDecl*> DeclMap;
   std::unordered_map<std::type_index, STypeData> TypeDataMap;
 
-  private:
+ private:
   friend XCORE_API CDeclManager& GetDeclManager();
 };
 
@@ -92,12 +93,24 @@ auto CDeclManager::Init() -> void {
   }
 }
 auto CDeclManager::Exit() -> void {}
-auto CDeclManager::FindType(const std::string& name) -> RType* { return FindDecl<RType>(name); }
-auto CDeclManager::FindEnum(const std::string& name) -> REnum* { return FindDecl<REnum>(name); }
-auto CDeclManager::FindClass(const std::string& name) -> RClass* { return FindDecl<RClass>(name); }
-auto CDeclManager::FindStruct(const std::string& name) -> RStruct* { return FindDecl<RStruct>(name); }
-auto CDeclManager::FindProperty(const std::string& name) -> RProperty* { return FindDecl<RProperty>(name); }
-auto CDeclManager::FindFunction(const std::string& name) -> RFunction* { return FindDecl<RFunction>(name); }
+auto CDeclManager::FindType(const std::string& name) -> RType* {
+  return FindDecl<RType>(name);
+}
+auto CDeclManager::FindEnum(const std::string& name) -> REnum* {
+  return FindDecl<REnum>(name);
+}
+auto CDeclManager::FindClass(const std::string& name) -> RClass* {
+  return FindDecl<RClass>(name);
+}
+auto CDeclManager::FindStruct(const std::string& name) -> RStruct* {
+  return FindDecl<RStruct>(name);
+}
+auto CDeclManager::FindProperty(const std::string& name) -> RProperty* {
+  return FindDecl<RProperty>(name);
+}
+auto CDeclManager::FindFunction(const std::string& name) -> RFunction* {
+  return FindDecl<RFunction>(name);
+}
 
 auto CDeclManager::GetDeclMap() -> const std::unordered_map<std::string, RDecl*>& {
   return DeclMap;
@@ -191,7 +204,7 @@ auto CDeclManager::RegisterType(RType* type) -> void {
 }
 
 template <typename PropType>
-auto CDeclManager::RegisteProperty(RProperty* prop) -> void{
+auto CDeclManager::RegisteProperty(RProperty* prop) -> void {
   std::string full_name = prop->GetFullName();
   X_ASSERT(!DeclMap.contains(full_name))
   DeclMap.insert(std::pair(full_name, prop));

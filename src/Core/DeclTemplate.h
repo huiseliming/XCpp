@@ -11,15 +11,13 @@ struct TBuiltin : public RBuiltin {
 
 template <typename E>
 struct TEnum : public REnum {
-  FORCEINLINE TEnum(const std::string& name, RNamespace* owner, CDeclManager* decl_manager)
-      : REnum(name, sizeof(E)) {
+  FORCEINLINE TEnum(const std::string& name, RNamespace* owner, CDeclManager* decl_manager) : REnum(name, sizeof(E)) {
     if (owner) {
       owner->AddDecl(this);
     }
     decl_manager->RegisterType<E>(this);
   }
-  FORCEINLINE TEnum(const std::string& name, const char* owner, CDeclManager* decl_manager)
-      : REnum(name, sizeof(E)) {
+  FORCEINLINE TEnum(const std::string& name, const char* owner, CDeclManager* decl_manager) : REnum(name, sizeof(E)) {
     if (owner) {
       if (RNamespace* namespace_owner = decl_manager->GetNamespace(owner)) {
         namespace_owner->AddDecl(this);
@@ -43,15 +41,13 @@ struct TClass : public RClass {
     ASTraitsFlag = asGetTypeTraits<C>();
     decl_manager->RegisterType<C>(this);
   }
-  FORCEINLINE TClass(const std::string& name, RNamespace* owner, CDeclManager* decl_manager)
-      : RClass(name, sizeof(C)) {
+  FORCEINLINE TClass(const std::string& name, RNamespace* owner, CDeclManager* decl_manager) : RClass(name, sizeof(C)) {
     if (owner) {
       owner->AddDecl(this);
     }
     Init(decl_manager);
   }
-  FORCEINLINE TClass(const std::string& name, const char* owner, CDeclManager* decl_manager)
-      : RClass(name, sizeof(C)) {
+  FORCEINLINE TClass(const std::string& name, const char* owner, CDeclManager* decl_manager) : RClass(name, sizeof(C)) {
     if (owner) {
       if (RNamespace* namespace_owner = decl_manager->GetNamespace(owner)) {
         namespace_owner->AddDecl(this);
@@ -77,23 +73,20 @@ struct TGlobalVariable : public RProperty {
     decl_manager->RegisterGlobalVariables(this);
     decl_manager->RegisteProperty<T>(this);
   }
-  FORCEINLINE explicit TGlobalVariable(const std::string& name, void* var_ptr, RStruct* owner,
-                                       CDeclManager* decl_manager)
+  FORCEINLINE explicit TGlobalVariable(const std::string& name, void* var_ptr, RStruct* owner, CDeclManager* decl_manager)
       : RProperty(name, var_ptr) {
     X_ASSERT(owner != nullptr);
     Owner = owner;
     Init(decl_manager);
   }
-  FORCEINLINE explicit TGlobalVariable(const std::string& name, void* var_ptr, RNamespace* owner,
-                                       CDeclManager* decl_manager)
+  FORCEINLINE explicit TGlobalVariable(const std::string& name, void* var_ptr, RNamespace* owner, CDeclManager* decl_manager)
       : RProperty(name, var_ptr) {
     if (owner) {
       owner->AddDecl(this);
     }
     Init(decl_manager);
   }
-  FORCEINLINE explicit TGlobalVariable(const std::string& name, void* var_ptr, const char* owner,
-                                       CDeclManager* decl_manager)
+  FORCEINLINE explicit TGlobalVariable(const std::string& name, void* var_ptr, const char* owner, CDeclManager* decl_manager)
       : RProperty(name, var_ptr) {
     if (owner) {
       if (RNamespace* namespace_owner = decl_manager->GetNamespace(owner)) {
@@ -116,8 +109,7 @@ struct TMemberFunction : public RFunction {
     if constexpr (I > 1) MakeParameterType<I - 1>();
     ParameterTypes[I] = std::make_unique<TMemberVariable<ParameterCppTypes<I>>>(std::to_string(I), I, this, decl_manager);
   }
-  FORCEINLINE TMemberFunction(const std::string& name, asSFuncPtr func_ptr, RClass* owner,
-                              CDeclManager* decl_manager)
+  FORCEINLINE TMemberFunction(const std::string& name, asSFuncPtr func_ptr, RClass* owner, CDeclManager* decl_manager)
       : RFunction(name, func_ptr) {
     owner->AddFunction(this);
     decl_manager->RegisterFunction<F>(this);
@@ -160,8 +152,7 @@ struct TGlobalFunction : public RFunction {
       MakeParameterType<ParametersNum - 1>(decl_manager);
     }
   }
-  FORCEINLINE explicit TGlobalFunction(const std::string& name, asSFuncPtr func_ptr, RClass* owner,
-                                       CDeclManager* decl_manager)
+  FORCEINLINE explicit TGlobalFunction(const std::string& name, asSFuncPtr func_ptr, RClass* owner, CDeclManager* decl_manager)
       : RFunction(name, func_ptr) {
     if (owner) {
       owner->AddFunction(this);
