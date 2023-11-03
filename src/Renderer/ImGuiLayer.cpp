@@ -178,7 +178,7 @@ void CImGuiLayer::DrawDockSpace() {  // READ THIS !!!
   } else {
     dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
   }
-
+  dockspace_flags |= ImGuiDockNodeFlags_PassthruCentralNode;
   // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
   // and handle the pass-thru hole, so we ask Begin() to not render a background.
   if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) window_flags |= ImGuiWindowFlags_NoBackground;
