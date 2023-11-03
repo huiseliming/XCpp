@@ -9,5 +9,4 @@
   X_RUNTIME_ASSERT((Expr) == vk::Result::eSuccess, "vk::Result : {}", vk::to_string(vk::Result::eSuccess))
 
 struct CVKRenderer;
-struct CVKShader;
 

@@ -75,16 +75,16 @@ bool CApp::Init() {
 void CApp::Loop() {
   SDL_Event Event;
   while (SDL_PollEvent(&Event)) {
-    if (nullptr != ImGuiLayer) {
+    if (nullptr != Renderer) {
       CImGuiLayer::ProcessEvent(&Event);
     }
     switch (Event.type) {
       case SDL_QUIT:
-        RequiredExitLoop = true;
+        bRequiredExitLoop = true;
         break;
       case SDL_KEYDOWN:
         if (Event.key.keysym.sym == SDLK_ESCAPE) {
-          RequiredExitLoop = true;
+          bRequiredExitLoop = true;
         }
         break;
       default:
@@ -108,7 +108,7 @@ void CApp::Exit() {
 }
 
 bool CApp::CanExitLoop() {
-  if (RequiredExitLoop) {
+  if (bRequiredExitLoop) {
     ExitLoopCheckers.erase(std::remove_if(ExitLoopCheckers.begin(), ExitLoopCheckers.end(),
                                           [](auto& checker) {
                                             if (checker()) return true;

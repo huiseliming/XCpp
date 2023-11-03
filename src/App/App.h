@@ -1,6 +1,5 @@
 #pragma once
 #include "Renderer/Renderer.h"
-#include "ImGui/ImGuiLayer.h"
 
 class CApp;
 
@@ -33,13 +32,12 @@ class XAPP_API CApp {
  protected:
   SDL_Window* MainWindow = nullptr;
   IRenderer* Renderer = nullptr;
-  CImGuiLayer* ImGuiLayer = nullptr;
   ERendererType RendererType{ERendererType::Vulkan};
 
  private:
   bool CanExitLoop();
   int ExitCode = 0;
-  bool RequiredExitLoop = false;
+  bool bRequiredExitLoop = false;
   std::vector<std::function<bool()>> ExitLoopCheckers;
 
  private:

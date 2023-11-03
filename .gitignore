@@ -41,3 +41,4 @@ build/*
 out/*
 
 src/AngelScript/sdk
+src/ImGui/imgui-*

@@ -1,9 +1,10 @@
 #pragma once
-
 #define STBIDEF XRENDERER_API
 #include <stb_image.h>
 
 #include "Core/Object.h"
+
+class IRenderer;
 
 namespace Utils {
 XRENDERER_API std::vector<char> LoadBinaryFromFile(const std::string& file_path);

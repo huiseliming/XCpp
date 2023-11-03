@@ -207,7 +207,7 @@ auto CDeclManager::RegisterType(RType* type) -> void {
 template <typename PropType>
 auto CDeclManager::RegisteProperty(RProperty* prop) -> void {
   std::string full_name = prop->GetFullName();
-  X_ASSERT(!DeclMap.contains(full_name))
+  X_ASSERT(!DeclMap.contains(full_name));
   DeclMap.insert(std::pair(full_name, prop));
 
   auto type_index = std::type_index(typeid(PropType));
@@ -231,7 +231,7 @@ auto CDeclManager::RegisteProperty(RProperty* prop) -> void {
 template <typename FuncType>
 auto CDeclManager::RegisterFunction(RFunction* func) -> void {
   std::string full_name = func->GetFullName();
-  X_ASSERT(!DeclMap.contains(full_name))
+  X_ASSERT(!DeclMap.contains(full_name));
   DeclMap.insert(std::pair(full_name, func));
 }
 

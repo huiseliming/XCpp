@@ -1,3 +1,4 @@
+
 set(CURRENT_MODULE_NAME "XRenderer")
 
 file(GLOB_RECURSE ${CURRENT_MODULE_NAME}_HEADERS *.h *.hh *.hpp *.hxx)
@@ -13,7 +14,7 @@ add_library(${CURRENT_MODULE_NAME} SHARED ${${CURRENT_MODULE_NAME}_HEADERS} ${${
 # include directories
 target_include_directories(${CURRENT_MODULE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
 # link libraries
-target_link_libraries(${CURRENT_MODULE_NAME} PUBLIC XCore)
+target_link_libraries(${CURRENT_MODULE_NAME} PUBLIC XCore XImGui)
 # assimp
 find_package(assimp CONFIG REQUIRED)
 target_link_libraries(${CURRENT_MODULE_NAME} PRIVATE assimp::assimp)
@@ -26,7 +27,7 @@ target_link_libraries(${CURRENT_MODULE_NAME} PRIVATE glad::glad)
 find_package(glslang CONFIG REQUIRED)
 target_link_libraries(${CURRENT_MODULE_NAME} PRIVATE glslang::glslang glslang::glslang-default-resource-limits glslang::SPIRV)
 find_package(Vulkan REQUIRED)
-target_link_libraries(${CURRENT_MODULE_NAME} PRIVATE Vulkan::Vulkan)
+target_link_libraries(${CURRENT_MODULE_NAME} PUBLIC Vulkan::Vulkan)
 # export
 include(GenerateExportHeader)
 string(TOUPPER ${CURRENT_MODULE_NAME} CK_MODULE_NAME_UPPER)
