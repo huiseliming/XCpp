@@ -53,8 +53,6 @@ void CVKRenderer::Render() {
   // Render Command ED
   // 
   // ImGui Render Command BG
-    ImGuiLayer->NewFrame();
-    ImGuiLayer->DrawFrame();
     ImGuiLayer->RenderFrame();
   // ImGui Render Command ED
 
@@ -602,14 +600,28 @@ void CVKRenderer::AllocateCommandBuffers() {
 }
 
 void CVKRenderer::RecreateSwapchain() {
-  SPDLOG_ERROR("RecreateSwapchain");
   (void)Device.waitIdle();
+  GetVKImGuiLayer()->DestroyFramebuffers();
   DestroyFramebuffers();
   for (size_t i = 0; i < RenderFrames.size(); i++) {
     Device.destroyImageView(RenderFrames[i].SwapchainImageView);
   }
   CreateSwapchain();
   CreateFramebuffers();
+  GetVKImGuiLayer()->CreateFramebuffers();
+
+}
+
+void CVKRenderer::RebuildSwapchain() {
+  if (bRequireRecreateSwapchain) {
+    vk::ResultValue<vk::SurfaceCapabilitiesKHR> SurfaceCapabilitiesResult = PhysicalDevice.getSurfaceCapabilitiesKHR(Surface);
+    VK_SUCCEEDED(SurfaceCapabilitiesResult.result);
+    SurfaceCapabilities = SurfaceCapabilitiesResult.value;
+    if (SurfaceCapabilities.minImageExtent.width > 0 && SurfaceCapabilities.minImageExtent.height > 0) {
+      RecreateSwapchain();
+      bRequireRecreateSwapchain = false;
+    }
+  }
 }
 
 void CVKRenderer::DestroyCommandPool() {

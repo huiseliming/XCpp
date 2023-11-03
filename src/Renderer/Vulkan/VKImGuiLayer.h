@@ -7,7 +7,6 @@ struct SImGuiLayerRenderFrame {
   vk::CommandBuffer CommandBuffer;
 };
 
-
 class XRENDERER_API CVKImGuiLayer : public CImGuiLayer {
  public:
   virtual void Init(SDL_Window* main_window, IRenderer* renderer) override;

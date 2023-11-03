@@ -91,8 +91,17 @@ void CApp::Loop() {
         break;
     }
   }
+
   if (Renderer) {
+    if (RendererType == ERendererType::Vulkan) {
+      static_cast<CVKRenderer*>(Renderer)->RebuildSwapchain();
+    }
+    Renderer->GetImGuiLayer()->NewFrame();
+    Renderer->GetImGuiLayer()->DrawFrame();
+    // TODO: thread event
     Renderer->Render();
+  } else {
+    // TODO: thread event
   }
 }
 

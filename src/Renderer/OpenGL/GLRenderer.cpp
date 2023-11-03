@@ -1,4 +1,5 @@
 #include "GLRenderer.h"
+#include "GLImGuiLayer.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -35,81 +36,84 @@ void CGLRenderer::Init(SDL_Window* main_window) {
 
   X_RUNTIME_ASSERT(SDL_GL_SetSwapInterval(1) >= 0);
 
-  // BG
-  GLuint BufferHandle;
-  glGenBuffers(1, &BufferHandle);
-  glBindBuffer(GL_ARRAY_BUFFER, BufferHandle);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  //// BG
+  //GLuint BufferHandle;
+  //glGenBuffers(1, &BufferHandle);
+  //glBindBuffer(GL_ARRAY_BUFFER, BufferHandle);
+  //glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vertex_shader, 1, &VertexShaderSource, NULL);
-  glCompileShader(vertex_shader);
+  //GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+  //glShaderSource(vertex_shader, 1, &VertexShaderSource, NULL);
+  //glCompileShader(vertex_shader);
 
-  GLint is_succeeded = GL_FALSE;
-  GLint info_log_length;
+  //GLint is_succeeded = GL_FALSE;
+  //GLint info_log_length;
 
-  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &is_succeeded);
-  if (is_succeeded) {
+  //glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &is_succeeded);
+  //if (is_succeeded) {
 
-  } else {
-    glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &info_log_length);
-    if (info_log_length > 0) {
-      std::vector<char> info_log(info_log_length + 1);
-      glGetShaderInfoLog(vertex_shader, info_log_length, NULL, &info_log[0]);
-      SPDLOG_WARN("vertex_shader : %s", info_log.data());
-    }
-  }
+  //} else {
+  //  glGetShaderiv(vertex_shader, GL_INFO_LOG_LENGTH, &info_log_length);
+  //  if (info_log_length > 0) {
+  //    std::vector<char> info_log(info_log_length + 1);
+  //    glGetShaderInfoLog(vertex_shader, info_log_length, NULL, &info_log[0]);
+  //    SPDLOG_WARN("vertex_shader : %s", info_log.data());
+  //  }
+  //}
 
-  GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fragment_shader, 1, &FragmentShaderSource, NULL);
-  glCompileShader(fragment_shader);
+  //GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+  //glShaderSource(fragment_shader, 1, &FragmentShaderSource, NULL);
+  //glCompileShader(fragment_shader);
 
-  glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &is_succeeded);
-  if (!is_succeeded) {
-    glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &info_log_length);
-    if (info_log_length > 0) {
-      std::vector<char> info_log(info_log_length + 1);
-      glGetShaderInfoLog(fragment_shader, info_log_length, NULL, &info_log[0]);
-      SPDLOG_WARN("fragment_shader : %s", info_log.data());
-    }
-  }
-  unsigned int shader_program;
-  shader_program = glCreateProgram();
-  glAttachShader(shader_program, vertex_shader);
-  glAttachShader(shader_program, fragment_shader);
-  glLinkProgram(shader_program);
+  //glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &is_succeeded);
+  //if (!is_succeeded) {
+  //  glGetShaderiv(fragment_shader, GL_INFO_LOG_LENGTH, &info_log_length);
+  //  if (info_log_length > 0) {
+  //    std::vector<char> info_log(info_log_length + 1);
+  //    glGetShaderInfoLog(fragment_shader, info_log_length, NULL, &info_log[0]);
+  //    SPDLOG_WARN("fragment_shader : %s", info_log.data());
+  //  }
+  //}
+  //unsigned int shader_program;
+  //shader_program = glCreateProgram();
+  //glAttachShader(shader_program, vertex_shader);
+  //glAttachShader(shader_program, fragment_shader);
+  //glLinkProgram(shader_program);
 
-  glGetProgramiv(shader_program, GL_LINK_STATUS, &is_succeeded);
-  if (!is_succeeded) {
-    glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &info_log_length);
-    if (info_log_length > 0) {
-      std::vector<char> info_log(info_log_length + 1);
-      glGetProgramInfoLog(shader_program, info_log_length, NULL, &info_log[0]);
-      SPDLOG_WARN("shader_program : %s", info_log.data());
-    }
-  }
-  glUseProgram(shader_program);
+  //glGetProgramiv(shader_program, GL_LINK_STATUS, &is_succeeded);
+  //if (!is_succeeded) {
+  //  glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &info_log_length);
+  //  if (info_log_length > 0) {
+  //    std::vector<char> info_log(info_log_length + 1);
+  //    glGetProgramInfoLog(shader_program, info_log_length, NULL, &info_log[0]);
+  //    SPDLOG_WARN("shader_program : %s", info_log.data());
+  //  }
+  //}
+  //glUseProgram(shader_program);
 
-  glDeleteShader(fragment_shader);
-  glDeleteShader(vertex_shader);
+  //glDeleteShader(fragment_shader);
+  //glDeleteShader(vertex_shader);
 
   //
   //glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
   //glEnableVertexAttribArray(0);  
 
   // ED
+  ImGuiLayer = new CGLImGuiLayer();
+  ImGuiLayer->Init(MainWindow, this);
 }
 
 void CGLRenderer::Render() {
   glClearColor(ClearColor.x, ClearColor.y, ClearColor.z, ClearColor.w);
   glClear(GL_COLOR_BUFFER_BIT);
   // BG
-
+  ImGuiLayer->RenderFrame();
   // ED
   SDL_GL_SwapWindow(MainWindow);
 }
 
 void CGLRenderer::Shutdown() {
+  ImGuiLayer->Shutdown();
   // BG
 
   // ED

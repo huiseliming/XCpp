@@ -38,6 +38,8 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   std::function<void()> DrawWorld;
   std::function<void()> DrawUI;
 
+  void RebuildSwapchain();
+
  protected:
   void CreateInstance();
   void CreateSurface();
@@ -50,7 +52,6 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   void AllocateCommandBuffers();
 
   void RecreateSwapchain();
-
 
   void DestroyCommandPool();
   void DestroySyncObjects();

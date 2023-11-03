@@ -12,4 +12,7 @@ struct XRENDERER_API CGLRenderer : public IRenderer {
 
  protected:
   SDL_GLContext OpenGLContext;
+
+ private:
+  friend class CGLImGuiLayer;
 };

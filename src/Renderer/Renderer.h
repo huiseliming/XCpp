@@ -13,6 +13,8 @@ struct XRENDERER_API IRenderer {
   virtual OTexture* ImportTextureFromFile(const std::string& file_path) = 0;
   virtual OMesh* ImportMeshFromFile(const std::string& file_path) = 0;
 
+  CImGuiLayer* GetImGuiLayer() { return ImGuiLayer; }
+
  protected:
   glm::vec4 ClearColor = {
       0.0f,

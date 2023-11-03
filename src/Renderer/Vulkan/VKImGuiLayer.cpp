@@ -82,6 +82,7 @@ void CVKImGuiLayer::DrawFrame() {
 }
 
 void CVKImGuiLayer::RenderFrame() {
+  ImGuiIO& io = ImGui::GetIO();
   auto& RenderFrame = RenderFrames[GetVKRenderer()->RenderFrameIndex];
 
   RenderFrame.CommandBuffer.reset();
@@ -110,6 +111,7 @@ void CVKImGuiLayer::RenderFrame() {
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
   }
+
 }
 
 void CVKImGuiLayer::Shutdown() {

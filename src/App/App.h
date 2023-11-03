@@ -32,6 +32,7 @@ class XAPP_API CApp {
  protected:
   SDL_Window* MainWindow = nullptr;
   IRenderer* Renderer = nullptr;
+  CImGuiLayer* ImGuiLayer = nullptr;
   ERendererType RendererType{ERendererType::Vulkan};
 
  private:
