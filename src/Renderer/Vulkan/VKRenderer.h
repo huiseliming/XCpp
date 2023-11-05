@@ -3,29 +3,16 @@
 #include "../Renderer.h"
 #include "VKImGuiLayer.h"
 
-class CVKScopeCommand {
- public:
-  FORCEINLINE CVKScopeCommand(CVKRenderer* vk_renderer) : VKRenderer(vk_renderer) { SingleCommandBegin(); }
-  CVKScopeCommand(const CVKScopeCommand&) = delete;
-  FORCEINLINE CVKScopeCommand(CVKScopeCommand&& Other)
-      : VKRenderer(Other.VKRenderer), SingleCommandBuffer(Other.SingleCommandBuffer) {
-    Other.SingleCommandBuffer = vk::CommandBuffer();
-  }
-  CVKScopeCommand& operator=(const CVKScopeCommand&) = delete;
-  CVKScopeCommand& operator=(CVKScopeCommand&&) = delete;
-  FORCEINLINE ~CVKScopeCommand() { SingleCommandEnd(); }
-  operator VkCommandBuffer() { return SingleCommandBuffer; }
-  operator vk::CommandBuffer() { return SingleCommandBuffer; }
+struct SCreateBufferResult {
+  VkBuffer Buffer;
+  VmaAllocation Allocation;
+  VmaAllocationInfo AllocationInfo;
+};
 
- protected:
-  FORCEINLINE void SingleCommandBegin();
-  FORCEINLINE void SingleCommandEnd();
-
- private:
-  vk::CommandBuffer SingleCommandBuffer;
-  CVKRenderer* VKRenderer;
-
-  friend class CVulkanRenderer;
+struct SCreateImageResult {
+  VkImage Image;
+  VmaAllocation Allocation;
+  VmaAllocationInfo AllocationInfo;
 };
 
 struct XRENDERER_API CVKRenderer : public IRenderer {
@@ -33,8 +20,8 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   virtual void Render() override;
   virtual void Shutdown() override;
   virtual OTexture* ImportTextureFromFile(const std::string& file_path) override;
-  virtual OMesh* ImportMeshFromFile(const std::string& file_path) override;
-  
+  virtual OStaticMesh* ImportMeshFromFile(const std::string& file_path) override;
+
   std::function<void()> DrawWorld;
   std::function<void()> DrawUI;
 
@@ -44,6 +31,7 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   void CreateInstance();
   void CreateSurface();
   void CreateDevice();
+  void CreateMemoryAllocator();
   void CreateSwapchain();
   void CreateRenderPass();
   void CreateFramebuffers();
@@ -58,6 +46,7 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   void DestroyFramebuffers();
   void DestroyRenderPass();
   void DestroySwapchain();
+  void DestroyMemoryAllocator();
   void DestroyDevice();
   void DestroySurface();
   void DestroyInstance();
@@ -65,8 +54,122 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   CVKImGuiLayer* GetVKImGuiLayer() { return static_cast<CVKImGuiLayer*>(ImGuiLayer); }
 
  protected:
-  FORCEINLINE CVKScopeCommand CreateSingleScopeCommand();
-  protected:
+  FORCEINLINE vk::CommandBuffer AllocateAndBeginCommandBuffer() {
+    vk::CommandBuffer command_buffer;
+    vk::CommandBufferAllocateInfo CommandBufferAllocateInfo;
+    CommandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
+    CommandBufferAllocateInfo.commandPool = CommandPool;
+    CommandBufferAllocateInfo.commandBufferCount = 1;
+
+    auto CommandBuffersResult = Device.allocateCommandBuffers(CommandBufferAllocateInfo);
+    VK_SUCCEEDED(CommandBuffersResult.result);
+    command_buffer = CommandBuffersResult.value[0];
+
+    vk::CommandBufferBeginInfo CommandBufferBeginInfo;
+    CommandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
+    VK_SUCCEEDED(command_buffer.begin(CommandBufferBeginInfo));
+    return command_buffer;
+  }
+  FORCEINLINE void SubmitCommandBufferWaitIdle(vk::CommandBuffer command_buffer) {
+    VK_SUCCEEDED(command_buffer.end());
+    vk::SubmitInfo SubmitInfo;
+    SubmitInfo.commandBufferCount = 1;
+    SubmitInfo.pCommandBuffers = &command_buffer;
+    VK_SUCCEEDED(GraphicsQueue.submit(SubmitInfo));
+    // VK_SUCCEEDED(VulkanRenderer->Device.waitIdle());
+    VK_SUCCEEDED(GraphicsQueue.waitIdle());
+    Device.freeCommandBuffers(CommandPool, command_buffer);
+  }
+
+  FORCEINLINE SCreateBufferResult CreateBuffer(vk::BufferCreateInfo buffer_ci, VmaAllocationCreateFlags allocation_create_flags,
+                                               VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_AUTO) {
+    VmaAllocationCreateInfo allocation_ci = {};
+    allocation_ci.flags = allocation_create_flags;
+    allocation_ci.usage = memory_usage;
+
+    SCreateBufferResult result;
+    X_ASSERT(VK_SUCCESS == vmaCreateBuffer(MemoryAllocator, &buffer_ci.operator VkBufferCreateInfo&(), &allocation_ci,
+                                           &result.Buffer, &result.Allocation, nullptr));
+    return result;
+  }
+
+  FORCEINLINE SCreateImageResult CreateImage(vk::ImageCreateInfo image_ci, VmaAllocationCreateFlags allocation_create_flags,
+                                             VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_AUTO) {
+    VmaAllocationCreateInfo allocation_ci = {};
+    allocation_ci.flags = allocation_create_flags;
+    allocation_ci.usage = memory_usage;
+
+    SCreateImageResult result;
+    X_ASSERT(VK_SUCCESS == vmaCreateImage(MemoryAllocator, &image_ci.operator VkImageCreateInfo&(), &allocation_ci,
+                                          &result.Image, &result.Allocation, nullptr));
+
+    return result;
+  }
+  FORCEINLINE SCreateBufferResult CreateTransferSrc(vk::DeviceSize size) {
+    vk::BufferCreateInfo buffer_ci;
+    buffer_ci.flags = {};
+    buffer_ci.size = size;
+    buffer_ci.usage = vk::BufferUsageFlagBits::eTransferSrc;
+    buffer_ci.sharingMode = VULKAN_HPP_NAMESPACE::SharingMode::eExclusive;
+    buffer_ci.queueFamilyIndexCount = {};
+    const uint32_t* pQueueFamilyIndices = {};
+    return CreateBuffer(buffer_ci, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT);
+  }
+
+  FORCEINLINE void CopyBufferToImage(vk::Buffer buffer, vk::Image image, uint32 image_width, uint32 image_height) {
+    auto command_buffer = AllocateAndBeginCommandBuffer();
+
+    vk::BufferImageCopy buffer_image_copy;
+    buffer_image_copy.bufferOffset = 0;
+    buffer_image_copy.bufferRowLength = 0;
+    buffer_image_copy.bufferImageHeight = 0;
+    buffer_image_copy.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+    buffer_image_copy.imageSubresource.mipLevel = 0;
+    buffer_image_copy.imageSubresource.baseArrayLayer = 0;
+    buffer_image_copy.imageSubresource.layerCount = 1;
+    buffer_image_copy.imageOffset = vk::Offset3D(0, 0, 0);
+    buffer_image_copy.imageExtent = vk::Extent3D(image_width, image_height, 1);
+    command_buffer.copyBufferToImage(buffer, image, vk::ImageLayout::eTransferDstOptimal, buffer_image_copy);
+    SubmitCommandBufferWaitIdle(command_buffer);
+  }
+  FORCEINLINE void TransitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout old_image_layout,
+                                         vk::ImageLayout new_image_layout) {
+    auto command_buffer = AllocateAndBeginCommandBuffer();
+    vk::ImageMemoryBarrier image_memory_barrier;
+    image_memory_barrier.srcAccessMask = {};
+    image_memory_barrier.dstAccessMask = {};
+    image_memory_barrier.oldLayout = old_image_layout;
+    image_memory_barrier.newLayout = new_image_layout;
+    image_memory_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    image_memory_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    image_memory_barrier.image = image;
+    image_memory_barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+    image_memory_barrier.subresourceRange.baseMipLevel = 0;
+    image_memory_barrier.subresourceRange.levelCount = 1;
+    image_memory_barrier.subresourceRange.baseArrayLayer = 0;
+    image_memory_barrier.subresourceRange.layerCount = 1;
+    vk::PipelineStageFlags src_pipeline_stage_flags;
+    vk::PipelineStageFlags dst_pipeline_stage_flags;
+    if (old_image_layout == vk::ImageLayout::eUndefined && new_image_layout == vk::ImageLayout::eTransferDstOptimal) {
+      image_memory_barrier.srcAccessMask = vk::AccessFlagBits::eNone;
+      image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
+      src_pipeline_stage_flags = vk::PipelineStageFlagBits::eTopOfPipe;
+      dst_pipeline_stage_flags = vk::PipelineStageFlagBits::eTransfer;
+    } else if (old_image_layout == vk::ImageLayout::eTransferDstOptimal &&
+               new_image_layout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+      image_memory_barrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
+      image_memory_barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+      src_pipeline_stage_flags = vk::PipelineStageFlagBits::eTransfer;
+      dst_pipeline_stage_flags = vk::PipelineStageFlagBits::eFragmentShader;
+    } else {
+      X_ASSERT(false);
+    }
+    command_buffer.pipelineBarrier(src_pipeline_stage_flags, dst_pipeline_stage_flags, vk::DependencyFlags(), 0, nullptr, 0,
+                                   nullptr, 1, &image_memory_barrier);
+    SubmitCommandBufferWaitIdle(command_buffer);
+  }
+
+ protected:
   FORCEINLINE vk::SurfaceFormatKHR ChooseSwapchainSurfaceFormat();
   FORCEINLINE vk::PresentModeKHR ChooseSwapchainPresentMode();
   FORCEINLINE vk::Extent2D ChooseSwapchainExtent();
@@ -77,7 +180,7 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   FORCEINLINE uint32 FindMemoryTypeIndex(uint32 InMemoryTypeBits /* SupportetMemoryIndices */,
                                          vk::MemoryPropertyFlags InRequestedMemoryPropertyFlags);
 
-  protected:
+ protected:
   std::vector<std::string> SupportedLayers;
   std::vector<std::string> SupportedExtensions;
   std::vector<const char*> EnabledLayers;
@@ -100,7 +203,8 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   vk::Queue GraphicsQueue;
   vk::Queue PresentQueue;
 
-  
+  VmaAllocator MemoryAllocator;
+
   uint32 MinImageCount;
   vk::SurfaceCapabilitiesKHR SurfaceCapabilities;
   std::vector<vk::SurfaceFormatKHR> SurfaceFormats;
@@ -114,8 +218,7 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
 
   vk::RenderPass RenderPass;
 
-  struct SRenderFrame
-  {
+  struct SRenderFrame {
     vk::Image SwapchainImage;
     vk::ImageView SwapchainImageView;
     vk::Semaphore ImageAvailableSemaphore;
@@ -140,38 +243,6 @@ struct XRENDERER_API CVKRenderer : public IRenderer {
   friend class CVKImGuiLayer;
   friend class CVKScopeCommand;
 };
-
-void CVKScopeCommand::SingleCommandBegin() {
-  vk::CommandBufferAllocateInfo CommandBufferAllocateInfo;
-  CommandBufferAllocateInfo.level = vk::CommandBufferLevel::ePrimary;
-  CommandBufferAllocateInfo.commandPool = VKRenderer->CommandPool;
-  CommandBufferAllocateInfo.commandBufferCount = 1;
-
-  auto CommandBuffersResult = VKRenderer->Device.allocateCommandBuffers(CommandBufferAllocateInfo);
-  VK_SUCCEEDED(CommandBuffersResult.result);
-  SingleCommandBuffer = CommandBuffersResult.value[0];
-
-  vk::CommandBufferBeginInfo CommandBufferBeginInfo;
-  CommandBufferBeginInfo.flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit;
-  VK_SUCCEEDED(SingleCommandBuffer.begin(CommandBufferBeginInfo));
-}
-void CVKScopeCommand::SingleCommandEnd() {
-  if (SingleCommandBuffer) {
-    VK_SUCCEEDED(SingleCommandBuffer.end());
-
-    vk::SubmitInfo SubmitInfo;
-    SubmitInfo.commandBufferCount = 1;
-    SubmitInfo.pCommandBuffers = &SingleCommandBuffer;
-    VK_SUCCEEDED(VKRenderer->GraphicsQueue.submit(SubmitInfo));
-    // VK_SUCCEEDED(VulkanRenderer->Device.waitIdle());
-    VK_SUCCEEDED(VKRenderer->GraphicsQueue.waitIdle());
-    VKRenderer->Device.freeCommandBuffers(VKRenderer->CommandPool, SingleCommandBuffer);
-  }
-}
-
-FORCEINLINE CVKScopeCommand CVKRenderer::CreateSingleScopeCommand() {
-  return CVKScopeCommand(this);
-}
 
 vk::SurfaceFormatKHR CVKRenderer::ChooseSwapchainSurfaceFormat() {
   for (auto SurfaceFormat : SurfaceFormats) {
@@ -227,7 +298,7 @@ bool CVKRenderer::IsExtensionSupported(const std::string& InExtensionName) {
 }
 
 uint32 CVKRenderer::FindMemoryTypeIndex(uint32 InMemoryTypeBits /* SupportetMemoryIndices */,
-                                            vk::MemoryPropertyFlags InRequestedMemoryPropertyFlags) {
+                                        vk::MemoryPropertyFlags InRequestedMemoryPropertyFlags) {
   vk::PhysicalDeviceMemoryProperties MemoryProperties = PhysicalDevice.getMemoryProperties();
   for (uint32 i = 0; i < MemoryProperties.memoryTypeCount; i++) {
     if ((InMemoryTypeBits & (1 << i)) &&

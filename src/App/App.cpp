@@ -82,6 +82,12 @@ void CApp::Loop() {
       case SDL_QUIT:
         bRequiredExitLoop = true;
         break;
+      case SDL_WINDOWEVENT:
+        if (Event.window.event == SDL_WINDOWEVENT_CLOSE &&
+            Event.window.windowID == SDL_GetWindowID(MainWindow)) {
+          bRequiredExitLoop = true;
+        }
+        break;
       case SDL_KEYDOWN:
         if (Event.key.keysym.sym == SDLK_ESCAPE) {
           bRequiredExitLoop = true;

@@ -8,7 +8,7 @@ struct XRENDERER_API CGLRenderer : public IRenderer {
   virtual void Shutdown() override;
 
   virtual OTexture* ImportTextureFromFile(const std::string& file_path) override;
-  virtual OMesh* ImportMeshFromFile(const std::string& file_path) override;
+  virtual OStaticMesh* ImportMeshFromFile(const std::string& file_path) override;
 
  protected:
   SDL_GLContext OpenGLContext;

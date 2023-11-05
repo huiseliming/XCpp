@@ -64,8 +64,9 @@ void CVKImGuiLayer::Init(SDL_Window* main_window, IRenderer* renderer) {
   ImGui_ImplVulkan_Init(&InitInfo, RenderPass);
 
   {
-    auto SingleScopeCommand = GetVKRenderer()->CreateSingleScopeCommand();
-    ImGui_ImplVulkan_CreateFontsTexture(SingleScopeCommand);
+    auto command_buffer = GetVKRenderer()->AllocateAndBeginCommandBuffer();
+    ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+    GetVKRenderer()->SubmitCommandBufferWaitIdle(command_buffer);
   }
 
   ImGui_ImplVulkan_DestroyFontUploadObjects();

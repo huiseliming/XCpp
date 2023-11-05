@@ -11,7 +11,7 @@ struct XRENDERER_API IRenderer {
 
   virtual OResource* ImportResourceFromFile(const std::string& file_path);
   virtual OTexture* ImportTextureFromFile(const std::string& file_path) = 0;
-  virtual OMesh* ImportMeshFromFile(const std::string& file_path) = 0;
+  virtual OStaticMesh* ImportMeshFromFile(const std::string& file_path) = 0;
 
   CImGuiLayer* GetImGuiLayer() { return ImGuiLayer; }
 
@@ -25,7 +25,7 @@ struct XRENDERER_API IRenderer {
   glm::vec3 CameraPosition;
   glm::vec3 CameraForward;
   glm::vec3 CameraUp;
-  
+
   SDL_Window* MainWindow{nullptr};
   CImGuiLayer* ImGuiLayer{nullptr};
 

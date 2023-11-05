@@ -1,13 +1,20 @@
 #include "VKRenderer.h"
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 #include <glslang/Include/glslang_c_interface.h>
 #include <glslang/Public/resource_limits_c.h>
+
+#define VK_API_VERSION VK_API_VERSION_1_0
 
 void CVKRenderer::Init(SDL_Window* main_window) {
   MainWindow = main_window;
   CreateInstance();
   CreateSurface();
   CreateDevice();
+  CreateMemoryAllocator();
   CreateSwapchain();
   CreateRenderPass();
   CreateFramebuffers();
@@ -51,15 +58,16 @@ void CVKRenderer::Render() {
   CommandBuffer.endRenderPass();
   VK_SUCCEEDED(CommandBuffer.end());
   // Render Command ED
-  // 
+  //
   // ImGui Render Command BG
-    ImGuiLayer->RenderFrame();
+  ImGuiLayer->RenderFrame();
   // ImGui Render Command ED
 
   vk::Semaphore RenderWaitSemaphores[] = {RenderFrame.ImageAvailableSemaphore};
   vk::PipelineStageFlags WaitDstStage = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
-  
-  vk::CommandBuffer RenderCommandBuffers[] = {RenderFrame.CommandBuffer, GetVKImGuiLayer()->RenderFrames[RenderFrameIndex].CommandBuffer};
+
+  vk::CommandBuffer RenderCommandBuffers[] = {RenderFrame.CommandBuffer,
+                                              GetVKImGuiLayer()->RenderFrames[RenderFrameIndex].CommandBuffer};
 
   vk::Semaphore SignalSemaphores[] = {RenderFrame.RenderFinishedSemaphore};
 
@@ -109,11 +117,68 @@ void CVKRenderer::Shutdown() {
 }
 
 OTexture* CVKRenderer::ImportTextureFromFile(const std::string& file_path) {
+  int image_width, image_height, image_channels;
+  stbi_uc* image_pixels = stbi_load(file_path.c_str(), &image_width, &image_height, &image_channels, STBI_rgb_alpha);
+  vk::DeviceSize image_pixels_size = image_width * image_height * 4;
+  if (image_pixels == nullptr) {
+    SPDLOG_TRACE("[stbi_load()]");
+    return nullptr;
+  }
 
-  return nullptr;
+  OTexture* texture = new OTexture();
+  auto buffer_result = CreateTransferSrc(image_pixels_size);
+
+  void* mapped_data;
+  vmaMapMemory(MemoryAllocator, buffer_result.Allocation, &mapped_data);
+  memcpy(mapped_data, image_pixels, image_pixels_size);
+  vmaUnmapMemory(MemoryAllocator, buffer_result.Allocation);
+
+  stbi_image_free(image_pixels);
+
+  vk::ImageCreateInfo image_ci;
+  image_ci.flags = {};
+  image_ci.imageType = vk::ImageType::e2D;
+  image_ci.format = vk::Format::eR8G8B8A8Srgb;
+  image_ci.extent = vk::Extent3D{static_cast<uint32>(image_width), static_cast<uint32>(image_height), 1};
+  image_ci.mipLevels = 1;
+  image_ci.arrayLayers = 1;
+  image_ci.samples = vk::SampleCountFlagBits::e1;
+  image_ci.tiling = vk::ImageTiling::eOptimal;
+  image_ci.usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled;
+  image_ci.sharingMode = vk::SharingMode::eExclusive;
+  image_ci.queueFamilyIndexCount = {};
+  image_ci.pQueueFamilyIndices = {};
+  image_ci.initialLayout = vk::ImageLayout::eUndefined;
+  auto image_result = CreateImage(image_ci, VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT);
+  TransitionImageLayout(image_result.Image, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eUndefined,
+                        vk::ImageLayout::eTransferDstOptimal);
+  CopyBufferToImage(buffer_result.Buffer, image_result.Image, image_width, image_height);
+  vmaDestroyBuffer(MemoryAllocator, buffer_result.Buffer, buffer_result.Allocation);
+  TransitionImageLayout(image_result.Image, vk::Format::eR8G8B8A8Srgb, vk::ImageLayout::eTransferDstOptimal,
+                        vk::ImageLayout::eShaderReadOnlyOptimal);
+  return texture;
 }
 
-OMesh* CVKRenderer::ImportMeshFromFile(const std::string& file_path) {
+OStaticMesh* CVKRenderer::ImportMeshFromFile(const std::string& file_path) {
+  Assimp::Importer importer;
+  const aiScene* scene = importer.ReadFile(file_path, aiProcess_Triangulate);
+
+  if (scene && scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+    SPDLOG_ERROR(importer.GetErrorString());
+    return nullptr;
+  }
+  struct FProcessNode {
+    void operator()(const aiNode* node, const aiScene* scene) {
+      for (size_t i = 0; i < node->mNumMeshes; i++) {
+        const aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+      }
+      for (size_t i = 0; i < node->mNumChildren; i++) {
+        this->operator()(node->mChildren[i], scene);
+      }
+    }
+  } process_node;
+  process_node(scene->mRootNode, scene);
+
   return nullptr;
 }
 
@@ -207,7 +272,7 @@ void CVKRenderer::CreateInstance() {
   ApplicationInfo.setApplicationVersion(1);
   ApplicationInfo.setPEngineName("MiniEngine");
   ApplicationInfo.setEngineVersion(0);
-  ApplicationInfo.setApiVersion(VK_API_VERSION_1_1);
+  ApplicationInfo.setApiVersion(VK_API_VERSION);
 
   vk::InstanceCreateInfo InstanceCreateInfo;
 #if VK_EXT_validation_features
@@ -411,6 +476,20 @@ void CVKRenderer::CreateDevice() {
   PresentQueue = GraphicsFamilyIndex != PresentFamilyIndex ? Device.getQueue(PresentFamilyIndex, 0) : GraphicsQueue;
 }
 
+void CVKRenderer::CreateMemoryAllocator() {
+  VmaVulkanFunctions vulkan_functions = {};
+  vulkan_functions.vkGetInstanceProcAddr = &vkGetInstanceProcAddr;
+  vulkan_functions.vkGetDeviceProcAddr = &vkGetDeviceProcAddr;
+
+  VmaAllocatorCreateInfo allocator_ci = {};
+  allocator_ci.vulkanApiVersion = VK_API_VERSION;
+  allocator_ci.physicalDevice = PhysicalDevice;
+  allocator_ci.device = Device;
+  allocator_ci.instance = Instance;
+  allocator_ci.pVulkanFunctions = &vulkan_functions;
+  vmaCreateAllocator(&allocator_ci, &MemoryAllocator);
+}
+
 void CVKRenderer::CreateSwapchain() {
   vk::ResultValue<vk::SurfaceCapabilitiesKHR> SurfaceCapabilitiesResult = PhysicalDevice.getSurfaceCapabilitiesKHR(Surface);
   VK_SUCCEEDED(SurfaceCapabilitiesResult.result);
@@ -576,7 +655,6 @@ void CVKRenderer::CreateCommandPool() {
   auto CommandPoolResult = Device.createCommandPool(CommandPoolCreateInfo);
   VK_SUCCEEDED(CommandPoolResult.result);
   CommandPool = CommandPoolResult.value;
-
 }
 
 void CVKRenderer::AllocateCommandBuffers() {
@@ -609,7 +687,6 @@ void CVKRenderer::RecreateSwapchain() {
   CreateSwapchain();
   CreateFramebuffers();
   GetVKImGuiLayer()->CreateFramebuffers();
-
 }
 
 void CVKRenderer::RebuildSwapchain() {
@@ -653,6 +730,10 @@ void CVKRenderer::DestroySwapchain() {
   Device.destroySwapchainKHR(Swapchain);
 }
 
+void CVKRenderer::DestroyMemoryAllocator() {
+  vmaDestroyAllocator(MemoryAllocator);
+}
+
 void CVKRenderer::DestroyDevice() {
   Device.destroy();
 }
@@ -669,9 +750,8 @@ void CVKRenderer::DestroyInstance() {
 }
 
 VkBool32 CVKRenderer::DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                                                             VkDebugUtilsMessageTypeFlagsEXT messageType,
-                                                             const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                                                             void* pUserData) {
+                                                  VkDebugUtilsMessageTypeFlagsEXT messageType,
+                                                  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
 #if VK_EXT_validation_features
   if (strcmp(pCallbackData->pMessageIdName, "UNASSIGNED-DEBUG-PRINTF") == 0) {
     SPDLOG_ERROR("{}", pCallbackData->pMessage);
@@ -714,7 +794,7 @@ VkBool32 CVKRenderer::DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFla
 }
 
 //
-//IShader* CVKRenderer::CreateShader(EShaderType shader_type, const char* source, const char* entry_point) {
+// IShader* CVKRenderer::CreateShader(EShaderType shader_type, const char* source, const char* entry_point) {
 //  std::string shader_code = Utils::LoadCodeFromFile(source);
 //  const glslang_input_t input = {.language = GLSLANG_SOURCE_GLSL,
 //                                 .stage = GetGLSLangStageShaderType(shader_type),
@@ -777,6 +857,6 @@ VkBool32 CVKRenderer::DebugUtilsMessengerCallback(VkDebugUtilsMessageSeverityFla
 //  return nullptr;
 //}
 //
-//IBuffer* CVKRenderer::CreateBuffer(void* init_data, uint64 buffer_size) {
+// IBuffer* CVKRenderer::CreateBuffer(void* init_data, uint64 buffer_size) {
 //  return nullptr;
 //}
